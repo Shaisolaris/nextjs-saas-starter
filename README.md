@@ -1,5 +1,9 @@
 # nextjs-saas-starter
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShaisolaris%2Fnextjs-saas-starter&env=NEXTAUTH_SECRET,NEXTAUTH_URL,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,DATABASE_URL&envDescription=Required%20environment%20variables&envLink=https%3A%2F%2Fgithub.com%2FShaisolaris%2Fnextjs-saas-starter%23environment-variables)
+
+> Production-ready Next.js 14 SaaS boilerplate. One-click deploy to Vercel. Auth, Stripe billing, Prisma, multi-tenancy, dark mode.
+
 Production-ready Next.js 14 SaaS starter with App Router, NextAuth.js authentication, Stripe billing, Prisma ORM, multi-tenant workspace architecture, analytics dashboard, and dark mode. Built with TypeScript end-to-end.
 
 ## Stack
