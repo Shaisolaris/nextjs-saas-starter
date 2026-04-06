@@ -1,105 +1,72 @@
-"use client";
-
-import { useState } from "react";
 import type { Metadata } from "next";
-import { useRouter, useSearchParams } from "next/navigation";
-import { PricingCard } from "@/components/billing/pricing-card";
+import { getInvoices } from "@/lib/data";
+import { isDemoMode } from "@/lib/demo-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { PLANS } from "@/lib/stripe";
-import type { BillingPlan } from "@/types";
 
-export default function BillingPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const success = searchParams.get("success");
-  const canceled = searchParams.get("canceled");
-  const [isLoading, setIsLoading] = useState(false);
+export const metadata: Metadata = { title: "Billing" };
 
-  const handleSelectPlan = async (plan: BillingPlan) => {
-    if (plan.price === 0) return;
+const PLANS = [
+  { name: "Free", price: 0, features: ["3 projects", "2 team members", "1 GB storage", "Community support"], current: false },
+  { name: "Pro", price: 29, features: ["25 projects", "10 team members", "50 GB storage", "Priority support", "Custom domains", "API access"], current: true },
+  { name: "Enterprise", price: 99, features: ["Unlimited projects", "Unlimited members", "500 GB storage", "Dedicated support", "SSO", "Audit logs", "SLA"], current: false },
+];
 
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId: plan.stripePriceId }),
-      });
-
-      const data = await res.json() as { url?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleManageBilling = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/billing/portal", { method: "POST" });
-      const data = await res.json() as { url?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error("Portal error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default async function BillingPage() {
+  const invoices = await getInvoices("demo");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Billing</h1>
+        <h1 className="text-3xl font-bold">Billing</h1>
         <p className="text-muted-foreground">Manage your subscription and billing</p>
       </div>
 
-      {success && (
-        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-200">
-          Your subscription has been activated successfully!
-        </div>
-      )}
-      {canceled && (
-        <div className="rounded-md bg-yellow-50 p-4 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
-          Checkout was canceled. You can try again anytime.
-        </div>
-      )}
-
-      {/* Current Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Current Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge variant="success">Active</Badge>
-            <span className="font-medium">Free Plan</span>
-          </div>
-          <Button variant="outline" onClick={handleManageBilling} isLoading={isLoading}>
-            Manage Billing
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Pricing Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {PLANS.map((plan) => (
-          <PricingCard
-            key={plan.id}
-            plan={plan}
-            currentPlan="free"
-            onSelect={handleSelectPlan}
-            isLoading={isLoading}
-          />
+          <Card key={plan.name} className={plan.current ? "border-primary" : ""}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                {plan.name}
+                {plan.current && <Badge>Current</Badge>}
+              </CardTitle>
+              <p className="text-3xl font-bold">${plan.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <span className="text-green-600">✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button className={`mt-4 w-full rounded-md px-4 py-2 text-sm font-medium ${plan.current ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"}`}>
+                {plan.current ? "Current Plan" : plan.price === 0 ? "Downgrade" : "Upgrade"}
+              </button>
+            </CardContent>
+          </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>Invoice History</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {invoices.map((inv: any) => (
+              <div key={inv.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">{inv.plan}</p>
+                  <p className="text-sm text-muted-foreground">{inv.date}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-medium">${inv.amount}</span>
+                  <Badge variant="secondary">{inv.status}</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

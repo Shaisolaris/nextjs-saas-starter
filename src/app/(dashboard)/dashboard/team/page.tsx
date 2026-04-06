@@ -1,82 +1,48 @@
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { getTeamMembers, getCurrentUser } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Team" };
 
-async function getTeamMembers(tenantId: string) {
-  return prisma.user.findMany({
-    where: { tenantId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      role: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
-}
-
 export default async function TeamPage() {
-  const session = await getServerSession(authOptions);
-  const tenantId = (session?.user as Record<string, unknown>)?.tenantId as string | undefined;
-
-  const members = tenantId ? await getTeamMembers(tenantId) : [];
-
-  const roleColors: Record<string, "default" | "secondary" | "outline"> = {
-    OWNER: "default",
-    ADMIN: "secondary",
-    MEMBER: "outline",
-  };
+  const user = await getCurrentUser();
+  const members = await getTeamMembers(user?.tenantId ?? "demo");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Team</h1>
-          <p className="text-muted-foreground">Manage your workspace members</p>
+          <h1 className="text-3xl font-bold">Team</h1>
+          <p className="text-muted-foreground">{members.length} members</p>
         </div>
-        <Button>Invite Member</Button>
+        <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          Invite Member
+        </button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Members ({members.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y">
-            {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <Avatar src={member.image} name={member.name} size="md" />
-                  <div>
-                    <p className="text-sm font-medium">{member.name || "Unnamed"}</p>
-                    <p className="text-xs text-muted-foreground">{member.email}</p>
-                  </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {members.map((member: any) => (
+          <Card key={member.id}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-lg font-medium">
+                  {member.name.split(" ").map((n: string) => n[0]).join("")}
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant={roleColors[member.role] || "outline"}>
-                    {member.role.toLowerCase()}
-                  </Badge>
-                  <Button variant="ghost" size="sm">Edit</Button>
+                <div>
+                  <p className="font-medium">{member.name}</p>
+                  <p className="text-sm text-muted-foreground">{member.email}</p>
                 </div>
               </div>
-            ))}
-            {members.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No team members yet. Invite someone to get started.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="mt-4">
+                <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
+                  {member.role}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
