@@ -165,3 +165,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 MIT — use it for anything.
+
+## Why This Over Other Starters?
+
+| Feature | This Starter | Most Next.js SaaS Starters |
+|---|---|---|
+| Demo mode (zero config) | ✅ Works immediately | ❌ Need database + Stripe keys first |
+| Multi-tenancy | ✅ Slug-based tenant isolation | ❌ Single-tenant only |
+| Team management | ✅ Invite, roles (Owner/Admin/Member/Viewer) | ❌ Single user |
+| All dashboard pages | ✅ 6 pages with real data | ⚠️ Usually just landing page |
+| Stripe billing complete | ✅ Checkout + portal + webhooks + invoices | ⚠️ Checkout only |
+| Dark mode | ✅ Built in | ⚠️ Sometimes |
+| One-click deploy | ✅ Vercel button | ⚠️ Sometimes |
